@@ -1,5 +1,6 @@
-NAME ?= testkube-executor-template
+NAME ?= testkube-karate-executor
 BIN_DIR ?= $(HOME)/bin
+NAMESPACE ?= "default"
 
 build:
 	go build -o $(BIN_DIR)/$(NAME) cmd/agent/main.go 
@@ -13,7 +14,7 @@ mongo-dev:
 	docker run -p 27017:27017 mongo
 
 docker-build: 
-	docker build -t kubeshop/$(NAME) -f build/agent/Dockerfile .
+	docker build -t lreimer/$(NAME) -f build/agent/Dockerfile .
 
 install-swagger-codegen-mac: 
 	brew install swagger-codegen
