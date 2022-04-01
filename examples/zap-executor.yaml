@@ -1,0 +1,18 @@
+apiVersion: executor.testkube.io/v1
+kind: Executor
+metadata:
+  name: karate-executor
+  namespace: testkube
+spec:
+  executor_type: job
+  image: lreimer/testkube-karate-executor:latest
+  types:
+  - karate/test
+  - karate/feature
+  #contentTypes:
+  # - "string"
+  # - file-uri
+  # - git-file
+  # - git-dir
+  features:
+    - artifacts
