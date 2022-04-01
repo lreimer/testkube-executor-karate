@@ -16,6 +16,15 @@ mongo-dev:
 docker-build: 
 	docker build -t lreimer/$(NAME) -f build/agent/Dockerfile .
 
+install-jbang:
+	curl -Ls https://sh.jbang.dev | bash -s - app setup
+
+install-jbang-mac:
+	brew install jbangdev/tap/jbang
+
+install-karate:
+	jbang app install --name karate com.intuit.karate:karate-core:1.1.0
+
 install-swagger-codegen-mac: 
 	brew install swagger-codegen
 
