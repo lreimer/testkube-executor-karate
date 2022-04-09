@@ -44,7 +44,7 @@ func (r *ExampleRunner) Run(execution testkube.Execution) (result testkube.Execu
 
 	// TODO return ExecutionResult
 	return testkube.ExecutionResult{
-		Status: testkube.StatusPtr(testkube.SUCCESS_ExecutionStatus),
+		Status: testkube.StatusPtr(testkube.PASSED_ExecutionStatus),
 		Output: "exmaple test output",
 	}, nil
 }
