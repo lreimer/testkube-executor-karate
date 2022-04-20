@@ -7,12 +7,7 @@ spec:
   executor_type: job
   image: lreimer/testkube-karate-executor:latest
   types:
-  - karate/test
   - karate/feature
-  #contentTypes:
-  # - "string"
-  # - file-uri
-  # - git-file
-  # - git-dir
+  - karate/project
   features:
     - artifacts
