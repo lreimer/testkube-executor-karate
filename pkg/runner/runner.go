@@ -1,50 +1,116 @@
 package runner
 
 import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	junit "github.com/joshdk/go-junit"
+
 	"github.com/kubeshop/testkube/pkg/api/v1/testkube"
-	"github.com/kubeshop/testkube/pkg/executor/content"
+	"github.com/kubeshop/testkube/pkg/executor"
 	"github.com/kubeshop/testkube/pkg/executor/output"
 )
 
-func NewRunner() *ExampleRunner {
-	return &ExampleRunner{
-		Fetcher: content.NewFetcher(""),
+type Params struct {
+	Datadir string // RUNNER_DATADIR
+}
+
+func NewRunner() *KarateRunner {
+	return &KarateRunner{
+		params: Params{
+			Datadir: os.Getenv("RUNNER_DATADIR"),
+		},
 	}
 }
 
-// ExampleRunner for template - change me to some valid runner
-type ExampleRunner struct {
-	Fetcher content.ContentFetcher
+type KarateRunner struct {
+	params Params
 }
 
-func (r *ExampleRunner) Run(execution testkube.Execution) (result testkube.ExecutionResult, err error) {
-	path, err := r.Fetcher.Fetch(execution.Content)
-	if err != nil {
+const FEATURE_TYPE = "feature"
+const PROJECT_TYPE = "project"
+
+func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.ExecutionResult, err error) {
+	// check that the datadir exists
+	_, err = os.Stat(r.params.Datadir)
+	if errors.Is(err, os.ErrNotExist) {
 		return result, err
 	}
 
-	output.PrintEvent("created content path", path)
+	// prepare the arguments, always use JUnit XML report
+	args := []string{"-f", "junit:xml"}
+	args = append(args, execution.Args...)
 
-	if execution.Content.IsFile() {
-		output.PrintEvent("using file", execution)
-		// TODO implement file based test content for string, git-file, file-uri
-		//      or remove if not used
+	var directory string
+	karateType := strings.Split(execution.TestType, "/")[1]
+	if karateType == FEATURE_TYPE && execution.Content.IsFile() {
+		directory = r.params.Datadir
+		args = append(args, "test-content")
+	} else if karateType == PROJECT_TYPE && execution.Content.IsDir() {
+		directory = filepath.Join(r.params.Datadir, "repo")
+		// feature file needs to be part of args
+	} else {
+		return result.Err(fmt.Errorf("unsupported content for test type %s", execution.TestType)), nil
 	}
 
-	if execution.Content.IsDir() {
-		output.PrintEvent("using dir", execution)
-		// TODO implement file based test content for git-dir
-		//      or remove if not used
+	// convert executor env variables to runner env variables
+	for key, value := range execution.Envs {
+		os.Setenv(key, value)
 	}
 
-	// TODO run executor here
+	output.PrintEvent("Running", directory, "karate", args)
+	output, err := executor.Run(directory, "karate", args...)
 
-	// error result should be returned if something is not ok
-	// return result.Err(fmt.Errorf("some test execution related error occured"))
+	if err == nil {
+		result.Status = testkube.ExecutionStatusPassed
+	} else {
+		result.Status = testkube.ExecutionStatusFailed
+		result.ErrorMessage = err.Error()
+		if strings.Contains(result.ErrorMessage, "exit status 1") {
+			result.ErrorMessage = "there are test failures"
+		} else {
+			// ZAP was unable to run at all, wrong args?
+			return result, nil
+		}
+	}
 
-	// TODO return ExecutionResult
-	return testkube.ExecutionResult{
-		Status: testkube.StatusPtr(testkube.PASSED_ExecutionStatus),
-		Output: "exmaple test output",
-	}, nil
+	result.Output = string(output)
+	result.OutputType = "text/plain"
+
+	junitReportPath := filepath.Join(directory, "target", "karate-reports")
+	err = filepath.Walk(junitReportPath, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && filepath.Ext(path) == ".xml" {
+			suites, _ := junit.IngestFile(path)
+			for _, suite := range suites {
+				for _, test := range suite.Tests {
+					result.Steps = append(
+						result.Steps,
+						testkube.ExecutionStepResult{
+							Name:     test.Name,
+							Duration: test.Duration.String(),
+							Status:   testStepStatus(test.Status),
+						})
+				}
+			}
+		}
+
+		return nil
+	})
+
+	return result, err
+}
+
+func testStepStatus(in junit.Status) (out string) {
+	switch string(in) {
+	case "passed":
+		return string(testkube.PASSED_ExecutionStatus)
+	case "skipped":
+		// we could ignore this otherwise
+		return string(testkube.PASSED_ExecutionStatus)
+	default:
+		return string(testkube.FAILED_ExecutionStatus)
+	}
 }
