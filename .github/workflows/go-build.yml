@@ -21,8 +21,11 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Setup JBang and Karate
-        run: make install-jbang install-karate
+      - name: Setup JBang
+        run: make install-jbang
+
+      - name: Setup Karate
+        run: make install-karate
 
       - name: Test
         run: go test -v ./...
