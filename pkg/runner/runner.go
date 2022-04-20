@@ -48,7 +48,8 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	karateType := strings.Split(execution.TestType, "/")[1]
 	if karateType == FEATURE_TYPE && execution.Content.IsFile() {
 		directory = r.params.Datadir
-		args = append(args, "test-content")
+		_ = os.Rename(filepath.Join(directory, "test-content"), filepath.Join(directory, "test-content.feature"))
+		args = append(args, "test-content.feature")
 	} else if karateType == PROJECT_TYPE && execution.Content.IsDir() {
 		directory = filepath.Join(r.params.Datadir, "repo")
 		// feature file needs to be part of args

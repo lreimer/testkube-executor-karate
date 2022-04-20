@@ -29,6 +29,7 @@ func TestRun(t *testing.T) {
 		// then
 		assert.NoError(t, err)
 		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
+		assert.Len(t, result.Steps, 3)
 	})
 }
 
