@@ -18,7 +18,6 @@ docker-build:
 
 install-jbang:
 	curl -Ls https://sh.jbang.dev | bash -s - app setup
-	export PATH="$$HOME/.jbang/bin:$$PATH"
 
 install-jbang-mac:
 	brew install jbangdev/tap/jbang

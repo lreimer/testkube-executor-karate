@@ -22,7 +22,9 @@ jobs:
         run: go build -v ./...
 
       - name: Setup JBang
-        run: make install-jbang
+        run: |
+          make install-jbang
+          echo "$HOME/.jbang/bin" >> $GITHUB_PATH
 
       - name: Setup Karate
         run: make install-karate
