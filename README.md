@@ -1,6 +1,6 @@
 ![Testkube Logo](https://raw.githubusercontent.com/kubeshop/testkube/main/assets/testkube-color-gray.png)
 
-# Welcome to TestKube ZAP Executor
+# Welcome to TestKube Karate Executor
 
 TestKube Karate Executor is a test executor to run Karate feature test definitions with [TestKube](https://testkube.io).
 
@@ -13,7 +13,7 @@ kubectl apply -f examples/karate-executor.yaml
 
 Issue the following commands to create and start a Karate test for a given feature file:
 ```bash
-kubectl testkube test create --filename examples/karate-test.feature --type "karate/test" --name karate-test
+kubectl testkube test create --filename examples/karate-success.feature --type "karate/feature" --name karate-test
 kubectl testkube test run --watch karate-test
 ```
 
