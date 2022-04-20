@@ -21,7 +21,7 @@ func TestRun(t *testing.T) {
 		execution := testkube.NewQueuedExecution()
 		execution.Content = testkube.NewStringTestContent("")
 		execution.TestType = "karate/feature"
-		writeTestContent(t, tempDir, "../../examples/karate-test.feature")
+		writeTestContent(t, tempDir, "../../examples/karate-success.feature")
 
 		// when
 		result, err := runner.Run(*execution)
@@ -30,6 +30,23 @@ func TestRun(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
 		assert.Len(t, result.Steps, 3)
+	})
+
+	t.Run("basic Karate failure feature", func(t *testing.T) {
+		// given
+		runner := NewRunner()
+		execution := testkube.NewQueuedExecution()
+		execution.Content = testkube.NewStringTestContent("")
+		execution.TestType = "karate/feature"
+		writeTestContent(t, tempDir, "../../examples/karate-failure.feature")
+
+		// when
+		result, err := runner.Run(*execution)
+
+		// then
+		assert.NoError(t, err)
+		assert.Equal(t, result.Status, testkube.ExecutionStatusFailed)
+		assert.Len(t, result.Steps, 1)
 	})
 }
 
