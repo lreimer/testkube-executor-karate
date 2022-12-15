@@ -12,6 +12,7 @@ import (
 	"github.com/kubeshop/testkube/pkg/api/v1/testkube"
 	"github.com/kubeshop/testkube/pkg/executor"
 	"github.com/kubeshop/testkube/pkg/executor/output"
+	"github.com/kubeshop/testkube/pkg/executor/runner"
 	"github.com/kubeshop/testkube/pkg/executor/secret"
 )
 
@@ -111,6 +112,11 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	})
 
 	return result, err
+}
+
+// GetType returns runner type
+func (r *KarateRunner) GetType() runner.Type {
+	return runner.TypeMain
 }
 
 func testStepStatus(in junit.Status) (out string) {
