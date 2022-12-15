@@ -29,7 +29,7 @@ func TestRun(t *testing.T) {
 		// then
 		assert.NoError(t, err)
 		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
-		assert.Len(t, result.Steps, 3)
+		assert.Len(t, result.Steps, 2)
 	})
 
 	t.Run("basic Karate failure feature", func(t *testing.T) {
