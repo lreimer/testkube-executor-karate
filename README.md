@@ -7,21 +7,23 @@ TestKube Karate Executor is a test executor to run Karate feature test definitio
 ## Usage
 
 You need to register and deploy the executor in your cluster.
+
 ```bash
 kubectl apply -f examples/karate-executor.yaml
 ```
 
 Issue the following commands to create and start a Karate test for a given feature file:
+
 ```bash
-kubectl testkube test create --filename examples/karate-success.feature --type "karate/feature" --name karate-test
-kubectl testkube test run --watch karate-test
+kubectl testkube create test --file examples/karate-success.feature --type "karate/feature" --name karate-test
+kubectl testkube run test --watch karate-test
 ```
 
-# Issues and enchancements 
+# Issues and enchancements
 
 Please follow the main [TestKube repository](https://github.com/kubeshop/testkube) for reporting any [issues](https://github.com/kubeshop/testkube/issues) or [discussions](https://github.com/kubeshop/testkube/discussions)
 
-# Testkube 
+# Testkube
 
 For more info go to [main testkube repo](https://github.com/kubeshop/testkube)
 
@@ -30,4 +32,4 @@ For more info go to [main testkube repo](https://github.com/kubeshop/testkube)
 ![Docker builds](https://img.shields.io/docker/automated/kubeshop/testkube-api-server) ![Code build](https://img.shields.io/github/workflow/status/kubeshop/testkube/Code%20build%20and%20checks) ![Release date](https://img.shields.io/github/release-date/kubeshop/testkube)
 
 ![Twitter](https://img.shields.io/twitter/follow/thekubeshop?style=social) ![Discord](https://img.shields.io/discord/884464549347074049)
- #### [Documentation](https://kubeshop.github.io/testkube) | [Discord](https://discord.gg/hfq44wtR6Q) 
+ #### [Documentation](https://kubeshop.github.io/testkube) | [Discord](https://discord.gg/hfq44wtR6Q)

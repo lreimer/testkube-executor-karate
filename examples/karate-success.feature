@@ -1,22 +1,16 @@
 Feature: Testing the Chuck Norris Joke API
 
   Background:
-    * url 'http://api.icndb.com/jokes/'
+    * url 'https://api.chucknorris.io/jokes/'
 
   Scenario: Testing random jokes GET endpoint
-    Given url 'http://api.icndb.com/jokes/random/'
+    Given url 'https://api.chucknorris.io/jokes/random/'
     When method GET
     Then status 200
 
-  Scenario: Testing 5 random jokes GET endpoint
-    Given url 'http://api.icndb.com/jokes/random/3'
+  Scenario: Testing random career jokes GET endpoint
+    Given url 'https://api.chucknorris.io/jokes/random/'
+    And param category = 'career'
     When method GET
     Then status 200
-
-  Scenario: Testing random jokes using path and parameter
-    Given path 'random'
-    And param firstName = 'Leander'
-    And param lastName = 'Reimer'
-    When method GET
-    Then status 200
-    And match response contains { type: 'success'}
+    And match response contains { categories: ["career"] }

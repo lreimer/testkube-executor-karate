@@ -12,6 +12,7 @@ import (
 	"github.com/kubeshop/testkube/pkg/api/v1/testkube"
 	"github.com/kubeshop/testkube/pkg/executor"
 	"github.com/kubeshop/testkube/pkg/executor/output"
+	"github.com/kubeshop/testkube/pkg/executor/secret"
 )
 
 type Params struct {
@@ -57,13 +58,21 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		return result.Err(fmt.Errorf("unsupported content for test type %s", execution.TestType)), nil
 	}
 
+	envManager := secret.NewEnvManagerWithVars(execution.Variables)
+	envManager.GetVars(execution.Variables)
+	// simply set the ENVs to use during execution
+	for _, env := range execution.Variables {
+		os.Setenv(env.Name, env.Value)
+	}
+
 	// convert executor env variables to runner env variables
 	for key, value := range execution.Envs {
 		os.Setenv(key, value)
 	}
 
 	output.PrintEvent("Running", directory, "karate", args)
-	output, err := executor.Run(directory, "karate", args...)
+	output, err := executor.Run(directory, "karate", envManager, args...)
+	output = envManager.Obfuscate(output)
 
 	if err == nil {
 		result.Status = testkube.ExecutionStatusPassed

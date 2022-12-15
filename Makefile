@@ -23,7 +23,7 @@ install-jbang-mac:
 	brew install jbangdev/tap/jbang
 
 install-karate:
-	jbang app install --name karate com.intuit.karate:karate-core:1.1.0
+	jbang app install --force --name karate com.intuit.karate:karate-core:1.3.1:all
 
 install-swagger-codegen-mac: 
 	brew install swagger-codegen
