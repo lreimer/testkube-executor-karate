@@ -54,6 +54,9 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		args = append(args, "test-content.feature")
 	} else if karateType == PROJECT_TYPE && execution.Content.IsDir() {
 		directory = filepath.Join(r.params.Datadir, "repo")
+		if execution.Content.Repository != nil && len(execution.Content.Repository.Path) > 0 {
+			directory = filepath.Join(directory, execution.Content.Repository.Path)
+		}
 		// feature file needs to be part of args
 	} else {
 		return result.Err(fmt.Errorf("unsupported content for test type %s", execution.TestType)), nil
