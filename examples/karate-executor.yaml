@@ -5,7 +5,8 @@ metadata:
   namespace: testkube
 spec:
   executor_type: job
-  image: lreimer/testkube-karate-executor:latest
+  # image: lreimer/testkube-karate-executor:main
+  image: ghcr.io/lreimer/testkube-executor-karate:main
   types:
   - karate/feature
   - karate/project
