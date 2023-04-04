@@ -1,4 +1,4 @@
-name: Docker images building and pushing
+name: Docker Hub image building and pushing
 on:
   workflow_dispatch:
   push:
@@ -11,29 +11,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v2
 
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.5.0
 
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-
-
-      -
-        name: Docker meta for Karate executor
+      
+      - name: Docker meta for Karate executor
         id: meta_karate_executor
         uses: docker/metadata-action@v3
         with:
@@ -45,8 +38,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - 
-        name: Build Karate Executor
+      - name: Build Karate Executor
         uses: docker/bake-action@v1
         with:
           files: |
