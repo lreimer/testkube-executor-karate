@@ -6,9 +6,11 @@ metadata:
 spec:
   executor_type: job
   # image: lreimer/testkube-karate-executor:main
+  # image: viyacr.azurecr.io/testkube-karate-executor:0.0.4-alpha
   image: ghcr.io/lreimer/testkube-executor-karate:main
   types:
   - karate/feature
   - karate/project
+  - karate/standalone
   features:
     - artifacts

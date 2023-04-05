@@ -9,7 +9,8 @@ ENV GOOS=linux
 COPY . .
 RUN cd cmd/agent;go build -o /runner -mod mod -a .
 
-FROM adoptopenjdk/openjdk11:jdk-11.0.16.1_1-slim
+FROM adoptopenjdk/openjdk11:jdk-11.0.18_10-slim
+ARG KARATEVERSION=1.3.1
 
 RUN apt-get update && \
     apt-get -y install curl && \
@@ -19,11 +20,8 @@ RUN apt-get update && \
 USER 1001
 WORKDIR /home/karate
 
-RUN curl -Ls https://sh.jbang.dev | bash -s - app setup && \
-    export PATH="/home/karate/.jbang/bin:$PATH" && \
-    jbang app install --name karate com.intuit.karate:karate-core:1.3.1:all && \
-    karate -h
+RUN curl -Ls "https://github.com/karatelabs/karate/releases/download/v$KARATEVERSION/karate-$KARATEVERSION.jar" --output karate.jar && \
+    java -jar karate.jar -h
 
-ENV PATH="/home/karate/.jbang/bin:$PATH"
 COPY --from=0 /runner /bin/runner
 ENTRYPOINT ["/bin/runner"]

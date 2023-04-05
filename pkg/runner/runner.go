@@ -34,6 +34,7 @@ type KarateRunner struct {
 
 const FEATURE_TYPE = "feature"
 const PROJECT_TYPE = "project"
+const STANDALONE_TYPE = "standalone"
 
 func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.ExecutionResult, err error) {
 	// check that the datadir exists
@@ -43,7 +44,7 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	}
 
 	// prepare the arguments, always use JUnit XML report
-	args := []string{"-f", "junit:xml"}
+	args := []string{"-jar", "/home/karate/karate.jar", "-f", "junit:xml"}
 	args = append(args, execution.Args...)
 
 	var directory string
@@ -53,6 +54,20 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		_ = os.Rename(filepath.Join(directory, "test-content"), filepath.Join(directory, "test-content.feature"))
 		args = append(args, "test-content.feature")
 	} else if karateType == PROJECT_TYPE && execution.Content.IsDir() {
+		directory = filepath.Join(r.params.Datadir, "repo")
+		if execution.Content.Repository != nil && len(execution.Content.Repository.Path) > 0 {
+			directory = filepath.Join(directory, execution.Content.Repository.Path)
+		}
+		// feature file needs to be part of args
+	} else if karateType == STANDALONE_TYPE && execution.Content.IsDir() {
+		// standalone gives the freedom to specify the entire set of java args to run the karate tests
+		if len(execution.Args) == 0 {
+			return result.Err(fmt.Errorf("args are required for test type %s", execution.TestType)), nil
+		}
+
+		// note the karate.jar is available at: /home/karate/karate.jar
+		args = execution.Args
+
 		directory = filepath.Join(r.params.Datadir, "repo")
 		if execution.Content.Repository != nil && len(execution.Content.Repository.Path) > 0 {
 			directory = filepath.Join(directory, execution.Content.Repository.Path)
@@ -74,8 +89,8 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		os.Setenv(key, value)
 	}
 
-	output.PrintEvent("Running", directory, "karate", args)
-	output, err := executor.Run(directory, "karate", envManager, args...)
+	output.PrintEvent("Running", directory, "java", args)
+	output, err := executor.Run(directory, "java", envManager, args...)
 	output = envManager.Obfuscate(output)
 
 	if err == nil {
