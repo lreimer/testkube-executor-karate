@@ -16,6 +16,8 @@ func TestRun(t *testing.T) {
 
 	t.Run("basic Karate test feature", func(t *testing.T) {
 		// given
+		setupKarateJar(t)
+
 		runner := NewRunner()
 		execution := testkube.NewQueuedExecution()
 		execution.Content = testkube.NewStringTestContent("")
@@ -33,6 +35,8 @@ func TestRun(t *testing.T) {
 
 	t.Run("basic Karate failure feature", func(t *testing.T) {
 		// given
+		setupKarateJar(t)
+
 		runner := NewRunner()
 		execution := testkube.NewQueuedExecution()
 		execution.Content = testkube.NewStringTestContent("")
@@ -50,6 +54,8 @@ func TestRun(t *testing.T) {
 
 	t.Run("project Karate test without repo path", func(t *testing.T) {
 		// given
+		setupKarateJar(t)
+
 		runner := NewRunner()
 		execution := testkube.NewQueuedExecution()
 		repository := testkube.NewGitRepository("http://not-used/", "main")
@@ -69,6 +75,8 @@ func TestRun(t *testing.T) {
 
 	t.Run("project Karate test with repo path", func(t *testing.T) {
 		// given
+		setupKarateJar(t)
+
 		runner := NewRunner()
 		execution := testkube.NewQueuedExecution()
 		repository := testkube.NewGitRepository("http://not-used/", "main").WithPath("my-dir")
@@ -84,6 +92,14 @@ func TestRun(t *testing.T) {
 		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
 		assert.Len(t, result.Steps, 2)
 	})
+}
+
+func setupKarateJar(t *testing.T) {
+	localJar, err := filepath.Abs("../../karate.jar")
+	if err != nil {
+		assert.FailNow(t, "can't locate karate.jar, please run `make install-karate`")
+	}
+	KarateJarPath = localJar
 }
 
 func writeTestContent(t *testing.T, dir string, file string) {

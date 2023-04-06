@@ -20,6 +20,10 @@ type Params struct {
 	Datadir string // RUNNER_DATADIR
 }
 
+var (
+	KarateJarPath = "/home/karate/karate.jar"
+)
+
 func NewRunner() *KarateRunner {
 	return &KarateRunner{
 		params: Params{
@@ -44,7 +48,7 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	}
 
 	// prepare the arguments, always use JUnit XML report
-	args := []string{"-jar", "/home/karate/karate.jar", "-f", "junit:xml"}
+	args := []string{"-jar", KarateJarPath, "-f", "junit:xml"}
 	args = append(args, execution.Args...)
 
 	var directory string
