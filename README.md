@@ -19,7 +19,21 @@ kubectl testkube create test --file examples/karate-success.feature --type "kara
 kubectl testkube run test --watch karate-test
 ```
 
-# Issues and enchancements
+# Test types
+
+## Feature
+Use `karate/feature` to run a [single karate feature](examples/karate-success.feature) file.
+
+## Project
+Use `karate/project` to run multiple karate feature files in one test.
+
+## Standalone
+Use `karate/standalone` to run karate tests, with full control of the java start arguments.
+> Note: karate.jar is available under `/home/karate/karate.jar`
+
+Take a look at [our example](examples/karate-standalone-test.yaml) and the [karate netty docs](https://karatelabs.github.io/karate/karate-netty/) for more information.
+
+# Issues and enhancements
 
 Please follow the main [TestKube repository](https://github.com/kubeshop/testkube) for reporting any [issues](https://github.com/kubeshop/testkube/issues) or [discussions](https://github.com/kubeshop/testkube/discussions)
 

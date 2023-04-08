@@ -1,16 +1,27 @@
 package runner
 
 import (
+	"fmt"
+	"github.com/kubeshop/testkube/pkg/executor/secret"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kubeshop/testkube/pkg/api/v1/testkube"
 	"github.com/stretchr/testify/assert"
 )
 
+type executorCallArgs struct {
+	dir       string
+	command   string
+	arguments []string
+}
+
 func TestRun(t *testing.T) {
 	// setup
+	setupKarateJar(t)
+
 	tempDir := os.TempDir()
 	os.Setenv("RUNNER_DATADIR", tempDir)
 
@@ -27,7 +38,7 @@ func TestRun(t *testing.T) {
 
 		// then
 		assert.NoError(t, err)
-		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
+		assert.Equal(t, testkube.ExecutionStatusPassed, result.Status)
 		assert.Len(t, result.Steps, 2)
 	})
 
@@ -44,7 +55,7 @@ func TestRun(t *testing.T) {
 
 		// then
 		assert.NoError(t, err)
-		assert.Equal(t, result.Status, testkube.ExecutionStatusFailed)
+		assert.Equal(t, testkube.ExecutionStatusFailed, result.Status)
 		assert.Len(t, result.Steps, 1)
 	})
 
@@ -84,6 +95,99 @@ func TestRun(t *testing.T) {
 		assert.Equal(t, result.Status, testkube.ExecutionStatusPassed)
 		assert.Len(t, result.Steps, 2)
 	})
+}
+
+func TestExecutorRunCall(t *testing.T) {
+	// setup
+	tempDir := os.TempDir()
+	os.Setenv("RUNNER_DATADIR", tempDir)
+	karateJarPath = "/home/karate/karate.jar"
+	repoContent := &testkube.TestContent{Type_: "git-dir", Repository: testkube.NewGitRepository("http://not-used", "main")}
+	repoWithPathContent := &testkube.TestContent{Type_: "git-dir", Repository: testkube.NewGitRepository("http://not-used", "main").WithPath("my-path")}
+
+	tests := []struct {
+		name          string
+		execution     *testkube.Execution
+		expectedArgs  []string
+		expectedPath  string
+		expectedError string
+	}{
+		{
+			name:         "feature uses default args",
+			execution:    newExecution("karate/feature", testkube.NewStringTestContent("")),
+			expectedArgs: []string{"-jar", "/home/karate/karate.jar", "-f", "junit:xml", "test-content.feature"},
+		},
+		{
+			name:         "project uses default args",
+			execution:    newExecution("karate/project", repoContent, "."),
+			expectedArgs: []string{"-jar", "/home/karate/karate.jar", "-f", "junit:xml", "."},
+		},
+		{
+			name:         "project start execution in repo path when specified",
+			execution:    newExecution("karate/project", repoWithPathContent, "features"),
+			expectedArgs: []string{"-jar", "/home/karate/karate.jar", "-f", "junit:xml", "features"},
+			expectedPath: repoWithPathContent.Repository.Path,
+		},
+		{
+			name:         "standalone uses only specified args",
+			execution:    newExecution("karate/standalone", repoContent, "-Dsomeurl=https://google.com", "-cp", "/home/karate/karate.jar", "com.intuit.karate.Main", "-f", "junit:xml", "my-path"),
+			expectedArgs: []string{"-Dsomeurl=https://google.com", "-cp", "/home/karate/karate.jar", "com.intuit.karate.Main", "-f", "junit:xml", "my-path"},
+		},
+		{
+			name:          "standalone throws error on missing args",
+			execution:     newExecution("karate/standalone", repoContent),
+			expectedError: "args are required for test type karate/standalone",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			var actualCall executorCallArgs
+			executorRun = func(dir string, command string, envMngr secret.Manager, arguments ...string) (out []byte, err error) {
+				actualCall = executorCallArgs{
+					dir:       dir,
+					command:   command,
+					arguments: arguments,
+				}
+				return []byte{}, fmt.Errorf("only interested in executor call")
+			}
+
+			// when
+			result, err := NewRunner().Run(*tt.execution)
+
+			// then
+			assert.NoError(t, err)
+			if len(tt.expectedError) > 0 {
+				assert.Equal(t, tt.expectedError, result.ErrorMessage)
+				return
+			}
+			assert.Equal(t, testkube.ExecutionStatusFailed, result.Status)
+			assert.NotNil(t, actualCall)
+
+			if len(tt.expectedPath) > 0 {
+				assert.True(t, strings.HasSuffix(actualCall.dir, tt.expectedPath))
+			}
+			assert.Equal(t, "java", actualCall.command)
+			assert.Equal(t, tt.expectedArgs, actualCall.arguments)
+		})
+	}
+}
+
+func newExecution(testType string, content *testkube.TestContent, arguments ...string) *testkube.Execution {
+	execution := testkube.NewQueuedExecution()
+	execution.TestType = testType
+	execution.Content = content
+	execution.Args = arguments
+	return execution
+}
+
+func setupKarateJar(t *testing.T) {
+	localJar, err := filepath.Abs("../../karate.jar")
+	if err != nil {
+		assert.FailNow(t, "can't locate karate.jar, please run `make install-karate`")
+	}
+	karateJarPath = localJar
 }
 
 func writeTestContent(t *testing.T, dir string, file string) {

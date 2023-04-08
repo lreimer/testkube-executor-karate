@@ -20,6 +20,11 @@ type Params struct {
 	Datadir string // RUNNER_DATADIR
 }
 
+var ( // used to be able to test (monkey patching)
+	karateJarPath = "/home/karate/karate.jar"
+	executorRun   = executor.Run
+)
+
 func NewRunner() *KarateRunner {
 	return &KarateRunner{
 		params: Params{
@@ -34,6 +39,7 @@ type KarateRunner struct {
 
 const FEATURE_TYPE = "feature"
 const PROJECT_TYPE = "project"
+const STANDALONE_TYPE = "standalone"
 
 func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.ExecutionResult, err error) {
 	// check that the datadir exists
@@ -43,7 +49,7 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	}
 
 	// prepare the arguments, always use JUnit XML report
-	args := []string{"-f", "junit:xml"}
+	args := []string{"-jar", karateJarPath, "-f", "junit:xml"}
 	args = append(args, execution.Args...)
 
 	var directory string
@@ -53,6 +59,20 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		_ = os.Rename(filepath.Join(directory, "test-content"), filepath.Join(directory, "test-content.feature"))
 		args = append(args, "test-content.feature")
 	} else if karateType == PROJECT_TYPE && execution.Content.IsDir() {
+		directory = filepath.Join(r.params.Datadir, "repo")
+		if execution.Content.Repository != nil && len(execution.Content.Repository.Path) > 0 {
+			directory = filepath.Join(directory, execution.Content.Repository.Path)
+		}
+		// feature file needs to be part of args
+	} else if karateType == STANDALONE_TYPE && execution.Content.IsDir() {
+		// standalone gives the freedom to specify the entire set of java args to run the karate tests
+		if len(execution.Args) == 0 {
+			return result.Err(fmt.Errorf("args are required for test type %s", execution.TestType)), nil
+		}
+
+		// note the karate.jar is available at: /home/karate/karate.jar
+		args = execution.Args
+
 		directory = filepath.Join(r.params.Datadir, "repo")
 		if execution.Content.Repository != nil && len(execution.Content.Repository.Path) > 0 {
 			directory = filepath.Join(directory, execution.Content.Repository.Path)
@@ -74,9 +94,9 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		os.Setenv(key, value)
 	}
 
-	output.PrintEvent("Running", directory, "karate", args)
-	output, err := executor.Run(directory, "karate", envManager, args...)
-	output = envManager.Obfuscate(output)
+	output.PrintEvent("Running", directory, "java", args)
+	execOutput, err := executorRun(directory, "java", envManager, args...)
+	execOutput = envManager.Obfuscate(execOutput)
 
 	if err == nil {
 		result.Status = testkube.ExecutionStatusPassed
@@ -86,12 +106,12 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		if strings.Contains(result.ErrorMessage, "exit status 1") {
 			result.ErrorMessage = "there are test failures"
 		} else {
-			// ZAP was unable to run at all, wrong args?
+			// KARATE was unable to run at all, wrong args?
 			return result, nil
 		}
 	}
 
-	result.Output = string(output)
+	result.Output = string(execOutput)
 	result.OutputType = "text/plain"
 
 	junitReportPath := filepath.Join(directory, "target", "karate-reports")

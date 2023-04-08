@@ -29,3 +29,4 @@ bin/
 site
 dist/
 target/
+/karate.jar

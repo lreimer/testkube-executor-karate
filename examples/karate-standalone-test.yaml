@@ -1,0 +1,24 @@
+apiVersion: tests.testkube.io/v3
+kind: Test
+metadata:
+  name: karate-standalone-example
+  namespace: testkube
+spec:
+  type: karate/standalone
+  content:
+    type: git-dir
+    repository:
+      type: git
+      uri: https://github.com/lreimer/testkube-executor-karate.git
+      branch: main
+      path: examples
+  executionContext:
+    args:
+      - "-cp"
+      - "/home/karate/karate.jar" # note: this is the path to karate.jar in the docker container
+      - "com.intuit.karate.Main"
+      - "-f"
+      - "junit:xml"
+      - "--tags"
+      - "~@ignore"
+      - "project"

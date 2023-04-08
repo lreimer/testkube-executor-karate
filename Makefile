@@ -1,6 +1,7 @@
 NAME ?= testkube-karate-executor
 BIN_DIR ?= $(HOME)/bin
 NAMESPACE ?= "default"
+KARATE_VERSION ?= 1.3.1
 
 build:
 	go build -o $(BIN_DIR)/$(NAME) cmd/agent/main.go 
@@ -16,16 +17,10 @@ mongo-dev:
 docker-build: 
 	docker build -t lreimer/$(NAME) -f build/agent/Dockerfile .
 
-install-jbang:
-	curl -Ls https://sh.jbang.dev | bash -s - app setup
-
-install-jbang-mac:
-	brew install jbangdev/tap/jbang
-
 install-karate:
-	jbang app install --force --name karate com.intuit.karate:karate-core:1.3.1:all
+	curl -Ls "https://github.com/karatelabs/karate/releases/download/v$(KARATE_VERSION)/karate-$(KARATE_VERSION).jar" --output karate.jar
 
-install-swagger-codegen-mac: 
+install-swagger-codegen-mac:
 	brew install swagger-codegen
 
 test: 
