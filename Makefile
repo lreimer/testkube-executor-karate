@@ -1,7 +1,7 @@
 NAME ?= testkube-karate-executor
 BIN_DIR ?= $(HOME)/bin
 NAMESPACE ?= "default"
-KARATE_VERSION ?= "1.3.1"
+KARATE_VERSION ?= 1.3.1
 
 build:
 	go build -o $(BIN_DIR)/$(NAME) cmd/agent/main.go 
