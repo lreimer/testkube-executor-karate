@@ -20,8 +20,9 @@ type Params struct {
 	Datadir string // RUNNER_DATADIR
 }
 
-var (
-	KarateJarPath = "/home/karate/karate.jar"
+var ( // used to be able to test (monkey patching)
+	karateJarPath = "/home/karate/karate.jar"
+	executorRun   = executor.Run
 )
 
 func NewRunner() *KarateRunner {
@@ -48,7 +49,7 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	}
 
 	// prepare the arguments, always use JUnit XML report
-	args := []string{"-jar", KarateJarPath, "-f", "junit:xml"}
+	args := []string{"-jar", karateJarPath, "-f", "junit:xml"}
 	args = append(args, execution.Args...)
 
 	var directory string
@@ -94,8 +95,8 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 	}
 
 	output.PrintEvent("Running", directory, "java", args)
-	output, err := executor.Run(directory, "java", envManager, args...)
-	output = envManager.Obfuscate(output)
+	execOutput, err := executorRun(directory, "java", envManager, args...)
+	execOutput = envManager.Obfuscate(execOutput)
 
 	if err == nil {
 		result.Status = testkube.ExecutionStatusPassed
@@ -105,12 +106,12 @@ func (r *KarateRunner) Run(execution testkube.Execution) (result testkube.Execut
 		if strings.Contains(result.ErrorMessage, "exit status 1") {
 			result.ErrorMessage = "there are test failures"
 		} else {
-			// ZAP was unable to run at all, wrong args?
+			// KARATE was unable to run at all, wrong args?
 			return result, nil
 		}
 	}
 
-	result.Output = string(output)
+	result.Output = string(execOutput)
 	result.OutputType = "text/plain"
 
 	junitReportPath := filepath.Join(directory, "target", "karate-reports")
